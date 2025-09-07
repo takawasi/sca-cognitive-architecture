@@ -352,6 +352,149 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+    // Setup tab navigation
+    setupTabs() {
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const targetTab = e.target.getAttribute('data-tab');
+                
+                // Remove active class from all buttons and panels
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabPanels.forEach(panel => panel.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding panel
+                e.target.classList.add('active');
+                const targetPanel = document.getElementById(targetTab);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            });
+        });
+    }
+    
+    // Setup interactive elements
+    setupInteractiveElements() {
+        // Code block copy functionality
+        this.setupCodeCopy();
+        
+        // Process step hover effects
+        this.setupProcessStepEffects();
+        
+        // Task item interactions
+        this.setupTaskInteractions();
+    }
+    
+    // Code copy functionality
+    setupCodeCopy() {
+        const codeBlocks = document.querySelectorAll('pre code, .code-block');
+        
+        codeBlocks.forEach(block => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'code-wrapper';
+            wrapper.style.position = 'relative';
+            
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-btn';
+            copyBtn.innerHTML = '📋 Copy';
+            copyBtn.style.cssText = `
+                position: absolute;
+                top: 0.5rem;
+                right: 0.5rem;
+                background: rgba(255, 255, 255, 0.1);
+                border: none;
+                color: white;
+                padding: 0.5rem;
+                border-radius: 0.25rem;
+                cursor: pointer;
+                font-size: 0.75rem;
+                opacity: 0;
+                transition: opacity 0.3s;
+            `;
+            
+            wrapper.addEventListener('mouseenter', () => {
+                copyBtn.style.opacity = '1';
+            });
+            
+            wrapper.addEventListener('mouseleave', () => {
+                copyBtn.style.opacity = '0';
+            });
+            
+            copyBtn.addEventListener('click', async () => {
+                try {
+                    const text = block.textContent || block.innerText;
+                    await this.copyToClipboard(text);
+                    copyBtn.innerHTML = '✓ Copied!';
+                    copyBtn.style.background = 'rgba(16, 185, 129, 0.3)';
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '📋 Copy';
+                        copyBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy code:', err);
+                    copyBtn.innerHTML = '❌ Failed';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '📋 Copy';
+                    }, 2000);
+                }
+            });
+            
+            // Wrap the code block
+            block.parentNode.insertBefore(wrapper, block);
+            wrapper.appendChild(block);
+            wrapper.appendChild(copyBtn);
+        });
+    }
+    
+    // Process step hover effects
+    setupProcessStepEffects() {
+        const processSteps = document.querySelectorAll('.process-step');
+        
+        processSteps.forEach((step, index) => {
+            step.addEventListener('mouseenter', () => {
+                step.style.transform = 'translateY(-4px) scale(1.02)';
+                step.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
+            });
+            
+            step.addEventListener('mouseleave', () => {
+                step.style.transform = 'translateY(0) scale(1)';
+                step.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
+            });
+        });
+    }
+    
+    // Task item interactions
+    setupTaskInteractions() {
+        const taskItems = document.querySelectorAll('.task-item');
+        
+        taskItems.forEach(task => {
+            task.addEventListener('click', () => {
+                task.style.background = '#f0f9ff';
+                task.style.borderLeft = '4px solid #2563eb';
+                
+                // Add completion effect
+                const checkmark = document.createElement('span');
+                checkmark.innerHTML = '✓';
+                checkmark.style.cssText = `
+                    color: #10b981;
+                    font-weight: bold;
+                    font-size: 1.2rem;
+                    margin-left: auto;
+                `;
+                
+                task.appendChild(checkmark);
+                
+                setTimeout(() => {
+                    task.style.opacity = '0.7';
+                }, 1000);
+            });
+        });
+    }
+}
+
 // Export for testing purposes
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = SCAWebsite;
