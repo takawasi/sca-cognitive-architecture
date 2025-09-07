@@ -1,0 +1,87 @@
+name: Deploy SCA Website to VPS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js for testing
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies (if package.json exists)
+      run: |
+        if [ -f website/package.json ]; then
+          cd website && npm install
+        fi
+        
+    - name: Run website validation
+      run: |
+        # Basic HTML validation
+        if command -v htmlhint &> /dev/null; then
+          htmlhint website/index.html
+        fi
+        
+        # Check if essential files exist
+        test -f website/index.html || exit 1
+        test -f website/assets/css/style.css || exit 1
+        test -f website/assets/js/main.js || exit 1
+        
+        echo "Website validation passed"
+        
+    - name: Deploy to VPS (main branch only)
+      if: github.ref == 'refs/heads/main'
+      env:
+        VPS_HOST: ${{ secrets.VPS_HOST }}
+        VPS_USER: ${{ secrets.VPS_USER }}
+        VPS_KEY: ${{ secrets.VPS_KEY }}
+        VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+      run: |
+        # Setup SSH key
+        mkdir -p ~/.ssh
+        echo "$VPS_KEY" > ~/.ssh/vps_key
+        chmod 600 ~/.ssh/vps_key
+        
+        # Add VPS to known hosts
+        ssh-keyscan -H $VPS_HOST >> ~/.ssh/known_hosts
+        
+        # Deploy website files
+        rsync -avz --delete -e "ssh -i ~/.ssh/vps_key -o StrictHostKeyChecking=no" \
+          website/ $VPS_USER@$VPS_HOST:$VPS_DEPLOY_PATH/
+          
+        # Set proper permissions
+        ssh -i ~/.ssh/vps_key -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST \
+          "sudo chown -R $VPS_USER:www-data $VPS_DEPLOY_PATH && \
+           sudo chmod -R 755 $VPS_DEPLOY_PATH && \
+           sudo systemctl reload nginx"
+           
+        echo "Deployment completed successfully!"
+        
+    - name: Verify deployment
+      if: github.ref == 'refs/heads/main'
+      run: |
+        # Wait for deployment to be active
+        sleep 10
+        
+        # Test website availability
+        curl -f https://takawasi-social.com/sca-system/ || exit 1
+        
+        echo "Deployment verification passed!"
+        
+    - name: Notify deployment status
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "🚀 SCA Website successfully deployed to https://takawasi-social.com/sca-system/"
+        echo "📊 Repository: ${{ github.repository }}"
+        echo "🔄 Commit: ${{ github.sha }}"
+        echo "👨‍💻 Actor: ${{ github.actor }}"
