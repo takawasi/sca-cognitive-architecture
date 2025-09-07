@@ -1,0 +1,41 @@
+{
+  "mcpServers": {
+    "sca-context-mapper": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["-m", "sca_tools.context_mapper_server"],
+      "env": {
+        "SCA_CONFIG_PATH": "./config/sca_config.json",
+        "SCA_LOG_LEVEL": "INFO"
+      }
+    },
+    "sca-decomposition": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["-m", "sca_tools.decomposition_server"],
+      "env": {
+        "SCA_CONFIG_PATH": "./config/sca_config.json",
+        "SCA_LOG_LEVEL": "INFO"
+      }
+    },
+    "sca-synthesis": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["-m", "sca_tools.synthesis_server"],
+      "env": {
+        "SCA_CONFIG_PATH": "./config/sca_config.json",
+        "SCA_LOG_LEVEL": "INFO"
+      }
+    },
+    "sca-memory": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["-m", "sca_tools.memory_server"],
+      "env": {
+        "SCA_CONFIG_PATH": "./config/sca_config.json",
+        "SCA_MEMORY_PATH": "~/.sca/memory/sca_memory.db",
+        "SCA_LOG_LEVEL": "INFO"
+      }
+    }
+  }
+}
